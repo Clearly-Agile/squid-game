@@ -39,8 +39,8 @@ namespace SquidGame.Tests.Services
             context.SaveChanges();
         }
 
-        [Fact]
-        public async Task GetGameList_ShouldReturnAllGamesSortedByStartDate()
+        [Fact(Skip = "DB Context Test")]
+        public async Task GetGameList_ShouldReturnAllGamesSortedByStartDate_DbContext()
         {
             var expectedFirstGame = new Game()
             {
@@ -85,7 +85,55 @@ namespace SquidGame.Tests.Services
         }
 
         [Fact]
-        public async Task GetGameList_ShouldOnlyReturnActiveGames()
+        public async Task GetGameList_ShouldReturnAllGamesSortedByStartDate()
+        {
+            var expectedFirstGame = new Game()
+            {
+                Id = 3333,
+                IsActive = true,
+                StartDateTime = new DateTimeOffset(new DateTime(2021, 1, 11))
+            };
+
+            var expectedSecondGame = new Game()
+            {
+                Id = 222,
+                IsActive = true,
+                StartDateTime = new DateTimeOffset(new DateTime(2021, 2, 11))
+            };
+
+            var expectedThirdGame = new Game()
+            {
+                Id = 5555,
+                IsActive = true,
+                StartDateTime = new DateTimeOffset(new DateTime(2021, 3, 11))
+            };
+
+            var expectedGames = new Collection<Game>()
+            {
+                expectedSecondGame,
+                expectedThirdGame,
+                expectedFirstGame
+            };
+
+            _repoMock.QueryAll<Game>().Returns(new TestAsyncEnumerable<Game>(new Collection<Game>()
+            {
+                expectedFirstGame,
+                expectedThirdGame,
+                expectedSecondGame
+            }));
+
+            var games = await _sut.GetGameList();
+
+            games.Count.ShouldBe(expectedGames.Count);
+
+            games.ElementAt(0).Id.ShouldBe(expectedFirstGame.Id);
+            games.ElementAt(1).Id.ShouldBe(expectedSecondGame.Id);
+            games.ElementAt(2).Id.ShouldBe(expectedThirdGame.Id);
+
+        }
+
+        [Fact(Skip = "DB Context Test")]
+        public async Task GetGameList_ShouldOnlyReturnActiveGames_DbContext()
         {
             var expectedGame1 = new Game()
             {
@@ -117,6 +165,42 @@ namespace SquidGame.Tests.Services
 
             games.Count.ShouldBe(expectedGameCount);
 
+        }
+
+        [Fact]
+        public async Task GetGameList_ShouldOnlyReturnActiveGames()
+        {
+            var expectedGame1 = new Game()
+            {
+                Id = 333,
+                IsActive = true
+            };
+
+            var expectedGame2 = new Game()
+            {
+                Id = 444,
+                IsActive = true
+            };
+
+            var notActiveGame = new Game()
+            {
+                Id = 555,
+                IsActive = false
+            };
+
+            var expectedGameCount = 2;
+
+            _repoMock.QueryAll<Game>().Returns(new TestAsyncEnumerable<Game>(new Collection<Game>()
+            {
+                expectedGame1,
+                expectedGame2,
+                notActiveGame
+            }));
+
+            var games = await _sut.GetGameList();
+
+            games.Count.ShouldBe(expectedGameCount);
+            games.Any(g => g.Id == notActiveGame.Id).ShouldBeFalse();
         }
 
         [Fact]
