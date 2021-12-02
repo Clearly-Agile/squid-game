@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -17,5 +19,7 @@ namespace SquidGame.Domain
         public DateTimeOffset StartDateTime { get; set; }
 
         public bool IsActive { get; set; }
+
+        public virtual ICollection<Player> Players { get; set; } = new Collection<Player>();
     }
 }
